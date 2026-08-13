@@ -69,3 +69,14 @@ def current_gw() -> int:
 
 def events_df() -> pd.DataFrame:
     return pd.DataFrame(get_bootstrap().get("events", []))
+
+
+@st.cache_data(ttl=60 * 60)
+def get_manager_details(entry_id: int):
+    try:
+        r = requests.get(f"{BASE_URL}/entry/{entry_id}/", timeout=30)
+        if r.ok:
+            return r.json()
+    except Exception:
+        pass
+    return {}
