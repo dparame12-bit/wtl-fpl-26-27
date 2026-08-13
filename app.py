@@ -128,6 +128,55 @@ div[data-testid="stMetric"] {
     background:white;border:1px solid #ece8ef;border-radius:18px;
     padding:14px 16px;box-shadow:0 6px 18px rgba(55,0,60,.05);
 }
+
+.rule-card {
+    background:#ffffff;
+    border:1px solid #ece8ef;
+    border-left:5px solid #37003c;
+    border-radius:16px;
+    padding:16px 18px;
+    margin:10px 0;
+    box-shadow:0 5px 16px rgba(55,0,60,.05);
+}
+.rule-card h4 { color:#37003c; margin:0 0 6px 0; }
+.rule-example {
+    background:#f7f3f8;
+    border-radius:14px;
+    padding:13px 15px;
+    margin:10px 0;
+    color:#3f3342;
+}
+.flow {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    flex-wrap:wrap;
+    margin:16px 0;
+}
+.flow-box {
+    background:#37003c;
+    color:white;
+    padding:10px 14px;
+    border-radius:12px;
+    font-weight:800;
+    text-align:center;
+    min-width:115px;
+}
+.flow-green { background:#008a61; }
+.flow-pink { background:#e90052; }
+.arrow { color:#37003c; font-size:24px; font-weight:900; }
+.formula {
+    text-align:center;
+    background:linear-gradient(90deg,#37003c,#65126e);
+    color:#00ff87;
+    border-radius:15px;
+    padding:15px;
+    margin:12px 0;
+    font-size:18px;
+    font-weight:900;
+}
+
 </style>
 """
 st.markdown(FPL_CSS, unsafe_allow_html=True)
@@ -254,6 +303,180 @@ def preseason_features():
     with c4:
         st.markdown("""<div class="feature-box chips"><div class="feature-title">🎮 Chip Awards</div><div class="feature-big">6 prizes</div><div>BB · TC · FH across H1 and H2</div></div>""", unsafe_allow_html=True)
 
+
+def render_rules():
+    st.markdown('<div class="section-title">📜 WTL 2026–27 Rules</div>', unsafe_allow_html=True)
+    st.caption("Every cash award has a fixed calculation so the tracker remains transparent throughout the season.")
+
+    t1,t2,t3,t4,t5,t6,t7,t8 = st.tabs([
+        "🏆 League",
+        "⚡ GW + MOTM",
+        "🏆 WTL Cup",
+        "🎮 Chips",
+        "⭐ Special Awards",
+        "😈 Troll Awards",
+        "🔥 Rivalry Week",
+        "📌 Global Rules",
+    ])
+
+    with t1:
+        st.markdown("### 🏆 League Finishers — ₹20,500")
+        st.markdown("Final **official FPL total points after GW38** determine the league positions. Transfer-hit deductions are already reflected in the official total.")
+        st.markdown("""
+| Finish | Prize |
+|---|---:|
+| 🥇 1st | ₹7,000 |
+| 🥈 2nd | ₹5,000 |
+| 🥉 3rd | ₹3,500 |
+| 4th | ₹2,500 |
+| 5th | ₹1,500 |
+| 6th | ₹1,000 |
+""")
+        st.markdown('<div class="rule-example"><b>Example:</b> If FPL shows 2,420 points after GW38, WTL uses 2,420. We do not add back transfer hits.</div>', unsafe_allow_html=True)
+
+    with t2:
+        st.markdown("### ⚡ Gameweek Winners — ₹6,000")
+        st.markdown("The highest **official net FPL Gameweek score** wins. Transfer hits count. Normal GW prize = **₹150**; GW19 and GW38 = **₹300**.")
+        st.markdown('<div class="rule-example"><b>Example:</b> 76 raw points with a -4 hit = 72 official points for the WTL GW contest.</div>', unsafe_allow_html=True)
+        st.markdown("**Tie:** the GW prize is split equally.")
+
+        st.divider()
+        st.markdown("### 📅 Manager of the Month — ₹5,000")
+        st.markdown("For each calendar month, we add the official net scores from all GWs assigned to that month. Highest total wins **₹500**.")
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">GW4<br>68 pts</div><div class="arrow">+</div>
+  <div class="flow-box">GW5<br>74 pts</div><div class="arrow">+</div>
+  <div class="flow-box">GW6<br>61 pts</div><div class="arrow">=</div>
+  <div class="flow-box flow-green">September<br>203 pts</div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown("**Tie:** ₹500 is split equally.")
+
+    with t3:
+        st.markdown("### 🏆 WTL Cup — ₹1,000")
+        st.markdown("All 20 managers enter. **12 receive randomized R32 byes**; the remaining 8 play four opening fixtures. Each matchup is decided using the combined official net FPL score across its two-GW window.")
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">R32<br>12 BYEs + 4 games</div><div class="arrow">→</div>
+  <div class="flow-box">R16<br>16 teams</div><div class="arrow">→</div>
+  <div class="flow-box">QF<br>8 teams</div><div class="arrow">→</div>
+  <div class="flow-box">SF<br>4 teams</div><div class="arrow">→</div>
+  <div class="flow-box flow-green">FINAL<br>2 teams</div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown("The draw is generated once after **20/20 managers are confirmed** and then frozen.")
+        st.markdown('<div class="rule-example"><b>Example:</b> Manager A scores 61 + 70 = 131 across the two GWs. Manager B scores 67 + 60 = 127. Manager A advances.</div>', unsafe_allow_html=True)
+        st.markdown("**Cup tie:** if aggregate scores are tied, higher overall WTL league position at the end of the second GW in that round advances.")
+
+    with t4:
+        st.markdown("### 🎮 Chip Awards — ₹1,500")
+        st.markdown("Six prizes of **₹250**: Bench Boost H1/H2, Triple Captain H1/H2, and Free Hit H1/H2. H1 = GW1–19; H2 = GW20–38.")
+
+        st.markdown('<div class="rule-card"><h4>Bench Boost</h4>Highest points contributed by the four bench players in that BB Gameweek.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="rule-example"><b>Example:</b> Bench scores 6 + 5 + 4 + 2 = <b>17 BB points</b>.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>Triple Captain</h4>Measured as the <b>extra</b> points generated by TC compared with normal 2× captaincy.</div>', unsafe_allow_html=True)
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">Player scores<br>12</div><div class="arrow">→</div>
+  <div class="flow-box">Normal captain<br>24</div><div class="arrow">→</div>
+  <div class="flow-box flow-pink">Triple captain<br>36</div>
+</div>
+<div class="formula">TC IMPACT = 36 − 24 = +12 points</div>
+""", unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>Free Hit</h4>Highest official total Gameweek score in a GW where Free Hit was used.</div>', unsafe_allow_html=True)
+        st.markdown("**Tie:** the relevant ₹250 chip prize is split equally.")
+
+    with t5:
+        st.markdown("### ⭐ Special Awards — ₹4,000")
+        st.caption("Eight awards × ₹500.")
+
+        st.markdown('<div class="rule-card"><h4>👑 Mid-Season Champion</h4>Manager ranked #1 on cumulative official FPL points after GW19. A tie for first splits the ₹500 prize.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>📈 Biggest Climb</h4>Measures improvement in scoring output between the two halves.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="formula">BIGGEST CLIMB = GW20–38 POINTS − GW1–19 POINTS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="rule-example"><b>Example:</b> H1 = 980, H2 = 1,120 → Climb Score = <b>+140</b>. Highest score wins.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>🧠 Transfer Tactician</h4>Highest genuine immediate transfer gain from ordinary transfers, after deducting transfer hits. Wildcard and Free Hit GWs are excluded.</div>', unsafe_allow_html=True)
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">Player OUT<br>2 pts</div><div class="arrow">→</div>
+  <div class="flow-box flow-green">Player IN<br>11 pts</div><div class="arrow">=</div>
+  <div class="flow-box">Transfer gain<br>+9</div><div class="arrow">−</div>
+  <div class="flow-box flow-pink">Hit<br>4</div><div class="arrow">=</div>
+  <div class="flow-box flow-green">Net gain<br>+5</div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown("For every normal transfer, the app compares **incoming player's points vs outgoing player's points in that same GW**. These gains are summed across the season and official hit costs are deducted once per GW.")
+        st.markdown('<div class="formula">NET TRANSFER POINTS = Σ(IN POINTS − OUT POINTS) − TRANSFER HIT COST</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>©️ Most Captain Points</h4>Highest cumulative normal captain contribution across the season. Each captain is counted at 2×. On TC weeks, we still use 2× here so the extra TC point is rewarded only in the Chip Award.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>🪑 Most Bench Points</h4>Highest cumulative points genuinely left unused on the bench. Bench Boost GWs are excluded.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>🚀 Highest GW Without Chip</h4>Highest official net GW score achieved without Wildcard, Free Hit, Triple Captain or Bench Boost.</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>🔄 Comeback King</h4>Biggest improvement in actual WTL league position from GW19 to GW38.</div>', unsafe_allow_html=True)
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">GW19 Rank<br>16th</div><div class="arrow">→</div>
+  <div class="flow-box flow-green">GW38 Rank<br>5th</div><div class="arrow">=</div>
+  <div class="flow-box flow-green">+11 places</div>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown('<div class="rule-card"><h4>🎯 Mr Consistent</h4>Among managers finishing in the overall Top 10, the lowest standard deviation of weekly GW rank wins. This rewards consistently strong weekly performance rather than a few huge spikes.</div>', unsafe_allow_html=True)
+
+    with t6:
+        st.markdown("### 😈 Troll Awards — ₹1,000")
+        st.markdown("Two awards of **₹500**.")
+
+        st.markdown('<div class="rule-card"><h4>🤦 Ctrl + Z</h4>The worst qualifying chip usage. A chip enters contention if TC impact &lt; 6, FH total &lt; 40, or BB impact &lt; 8.</div>', unsafe_allow_html=True)
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">TC impact<br>+4</div><div class="arrow">✓</div>
+  <div class="flow-box">FH score<br>58</div><div class="arrow">✗</div>
+  <div class="flow-box">BB impact<br>6</div><div class="arrow">✓</div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown("Among all qualifying disasters, the **lowest impact** wins Ctrl + Z. 😂")
+
+        st.markdown('<div class="rule-card"><h4>🥄 Wooden Spoon</h4>Lowest final overall FPL points among active managers.</div>', unsafe_allow_html=True)
+        st.markdown("To qualify, a manager must have made a transfer and/or played a chip in at least **25 different GWs**. If the bottom manager ghosted early, the award moves to the next-lowest eligible manager.")
+
+    with t7:
+        st.markdown("### 🔥 WTL Rivalry Week — ₹1,000")
+        st.markdown("Two special H2H events: **GW10 and GW30**. Before each event, the 20 managers are randomly paired into 10 fixtures.")
+        st.markdown("""
+<div class="flow">
+  <div class="flow-box">Manager A<br>78 pts</div>
+  <div class="arrow">VS</div>
+  <div class="flow-box">Manager B<br>69 pts</div>
+  <div class="arrow">→</div>
+  <div class="flow-box flow-green">Manager A<br>₹50</div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown("Official **net** GW score is used, so transfer hits count. Each matchup winner receives **₹50**.")
+        st.markdown("10 winners × ₹50 × 2 Rivalry Weeks = **₹1,000**.")
+        st.markdown("**Tie:** ₹50 is split ₹25 / ₹25.")
+        st.markdown("Rivalry Week is completely independent of the league table and WTL Cup.")
+
+    with t8:
+        st.markdown("### 📌 Global Rules")
+        st.markdown("""
+- **Official FPL data is the source of truth.**
+- Wherever we say **official/net GW score**, transfer-hit deductions count.
+- Cash prizes tied on the defined winning metric are **split equally**, unless a specific tiebreak is stated.
+- WTL Cup and Rivalry Week draws are randomized once and then **frozen**.
+- If FPL retrospectively adjusts points, WTL calculations update with the corrected FPL data.
+- Special-award leaderboards shown during the season are **live/provisional** until the relevant award can be finalized.
+- Wildcard and Free Hit GWs are excluded from **Transfer Tactician** because those transfer sets are unlimited or temporary.
+""")
+        st.success("Total season allocation: ₹40,000 ✅")
+
+
 st.sidebar.markdown("## ⚽ WTL 26–27")
 st.sidebar.caption("Fantasy. Rivalry. Chaos.")
 page = st.sidebar.radio(
@@ -330,35 +553,7 @@ elif standings.empty:
         st.info(f"Draw locked at {confirmed}/{TARGET_MANAGERS} managers. It will be generated once all 20 are confirmed.")
         st.markdown("**Format:** 12 first-round byes + 4 play-in fixtures → knockout rounds → one champion.")
     elif page == "Rules":
-        st.markdown('<div class="section-title">📜 WTL 2026–27 Prize Rules</div>', unsafe_allow_html=True)
-        st.markdown("""
-### 🏆 League Finishers — ₹20,500
-1st ₹7,000 · 2nd ₹5,000 · 3rd ₹3,500 · 4th ₹2,500 · 5th ₹1,500 · 6th ₹1,000
-
-### ⚡ Gameweek Winners — ₹6,000
-36 × ₹150 plus GW19 & GW38 at ₹300 each.
-
-### 📅 Manager of the Month — ₹5,000
-10 months × ₹500.
-
-### 🏆 WTL Cup — ₹1,000
-12 byes + 4 play-in fixtures, followed by knockout rounds.
-
-### 🎮 Chip Awards — ₹1,500
-BB H1/H2 · TC H1/H2 · FH H1/H2 — ₹250 each.
-
-### ⭐ Special Awards — ₹4,000
-Mid Season Champion · Biggest Climb · Transfer Tactician · Most Captain Points ·
-Most Bench Points · Highest GW Without Chip · Comeback King · Mr Consistent — ₹500 each.
-
-### 😈 Troll Awards — ₹1,000
-Ctrl + Z ₹500 · Wooden Spoon ₹500.
-
-### 🔥 Rivalry Week — ₹1,000
-GW10 and GW30 · 10 randomized H2Hs each week · ₹50 per winner.
-
-**TOTAL PRIZE POOL: ₹40,000**
-""")
+        render_rules()
     elif page == "Prize Summary":
         st.markdown('<div class="section-title">💰 Prize Summary</div>', unsafe_allow_html=True)
         st.info("Prize payouts will begin populating after GW1. Total season allocation is ₹40,000.")
@@ -438,6 +633,20 @@ else:
                     st.info("No data available yet.")
                 else:
                     st.metric("Current Leader", d.iloc[0].team_name)
+                    if key == "Transfer Tactician":
+                        st.caption("Net = Σ(incoming GW points − outgoing GW points) − transfer-hit cost. Wildcard/Free Hit GWs excluded.")
+                        chart = (
+                            alt.Chart(d.head(15))
+                            .mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5)
+                            .encode(
+                                x=alt.X("net_transfer_points:Q", title="Net Transfer Points"),
+                                y=alt.Y("team_name:N", sort="-x", title="Team"),
+                                color=alt.Color("net_transfer_points:Q", scale=alt.Scale(scheme="greens"), legend=None),
+                                tooltip=["team_name","manager_name","transfer_gain","hits_cost","transfer_count","net_transfer_points"],
+                            )
+                            .properties(height=430)
+                        )
+                        st.altair_chart(chart, use_container_width=True)
                     st.dataframe(d, use_container_width=True, hide_index=True)
 
     elif page == "Troll Awards":
@@ -446,36 +655,7 @@ else:
                     "**Wooden Spoon — ₹500:** lowest active manager at season end, subject to activity criteria.")
 
     elif page == "Rules":
-        st.markdown('<div class="section-title">📜 WTL 2026–27 Prize Rules</div>', unsafe_allow_html=True)
-        st.markdown("""
-### 🏆 League Finishers — ₹20,500
-1st ₹7,000 · 2nd ₹5,000 · 3rd ₹3,500 · 4th ₹2,500 · 5th ₹1,500 · 6th ₹1,000
-
-### ⚡ Gameweek Winners — ₹6,000
-36 × ₹150 plus GW19 & GW38 at ₹300 each.
-
-### 📅 Manager of the Month — ₹5,000
-10 months × ₹500.
-
-### 🏆 WTL Cup — ₹1,000
-12 byes + 4 play-in fixtures, followed by knockout rounds.
-
-### 🎮 Chip Awards — ₹1,500
-BB H1/H2 · TC H1/H2 · FH H1/H2 — ₹250 each.
-
-### ⭐ Special Awards — ₹4,000
-Mid Season Champion · Biggest Climb · Transfer Tactician · Most Captain Points ·
-Most Bench Points · Highest GW Without Chip · Comeback King · Mr Consistent — ₹500 each.
-
-### 😈 Troll Awards — ₹1,000
-Ctrl + Z ₹500 · Wooden Spoon ₹500.
-
-### 🔥 Rivalry Week — ₹1,000
-GW10 and GW30 · 10 randomized H2Hs each week · ₹50 per winner.
-
-**TOTAL PRIZE POOL: ₹40,000**
-""")
-
+        render_rules()
     elif page == "Prize Summary":
         rd,_ = rivalry_draw(standings)
         d = prize_summary(standings, rd)

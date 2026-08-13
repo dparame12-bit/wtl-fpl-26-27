@@ -1,7 +1,129 @@
 import pandas as pd
 import numpy as np
 from config import PRIZES, MONTH_GW_MAP
-from fpl_api import get_manager_history, get_manager_picks, current_gw
+from fpl_api import get_manager_history, get_manager_picks, get_manager_transfers, get_event_live, current_gw
+
+
+def _event_points_map(gw: int):
+    live = get_event_live(int(gw))
+    return {
+        int(e["id"]): int(e.get("stats", {}).get("total_points", 0))
+        for e in live.get("elements", [])
+    }
+
+def _chip_map(entry_id: int):
+    hist = get_manager_history(int(entry_id))
+    return {
+        int(c.get("event", 0)): c.get("name")
+        for c in hist.get("chips", [])
+    }
+
+def transfer_tactician_table(s):
+    """
+    Transfer Tactician:
+    For each permanent transfer, measure immediate-GW gain:
+        incoming player GW points - outgoing player GW points.
+    Sum those gains, then deduct official FPL transfer-hit costs.
+
+    Wildcard and Free Hit GWs are excluded because those moves are unlimited/
+    temporary and are not comparable with ordinary transfers.
+    """
+    rows = []
+
+    for _, r in s.iterrows():
+        entry_id = int(r.entry_id)
+        transfers = get_manager_transfers(entry_id) or []
+        chips = _chip_map(entry_id)
+        hist = get_manager_history(entry_id).get("current", [])
+        hit_cost_by_gw = {
+            int(h["event"]): abs(int(h.get("event_transfers_cost", 0)))
+            for h in hist
+        }
+
+        transfer_gain = 0
+        counted_transfers = 0
+        used_gws = set()
+
+        for t in transfers:
+            gw = int(t.get("event", 0) or 0)
+            if gw <= 0:
+                continue
+
+            # Exclude unlimited/temporary transfer windows.
+            if chips.get(gw) in {"wildcard", "freehit"}:
+                continue
+
+            pts = _event_points_map(gw)
+            element_in = int(t.get("element_in", 0) or 0)
+            element_out = int(t.get("element_out", 0) or 0)
+
+            in_points = pts.get(element_in, 0)
+            out_points = pts.get(element_out, 0)
+
+            transfer_gain += in_points - out_points
+            counted_transfers += 1
+            used_gws.add(gw)
+
+        # Deduct the hit once per GW, not once per transfer record.
+        hits_cost = sum(hit_cost_by_gw.get(gw, 0) for gw in used_gws)
+        net = transfer_gain - hits_cost
+
+        rows.append({
+            "entry_id": entry_id,
+            "team_name": r.team_name,
+            "manager_name": r.manager_name,
+            "transfer_gain": transfer_gain,
+            "hits_cost": hits_cost,
+            "transfer_count": counted_transfers,
+            "net_transfer_points": net,
+        })
+
+    return (
+        pd.DataFrame(rows)
+        .sort_values(["net_transfer_points", "transfer_gain"], ascending=[False, False])
+        .reset_index(drop=True)
+        if rows else pd.DataFrame()
+    )
+
+def captain_points_table(s):
+    """
+    Sum normal captain contribution across gameweeks.
+    Triple Captain GWs are capped at the normal 2x captain contribution here,
+    because the extra TC benefit has its own chip award.
+    """
+    rows = []
+
+    for _, r in s.iterrows():
+        entry_id = int(r.entry_id)
+        hist = get_manager_history(entry_id).get("current", [])
+        total = 0
+
+        for h in hist:
+            gw = int(h["event"])
+            try:
+                picks = get_manager_picks(entry_id, gw).get("picks", [])
+                captain = next((p for p in picks if p.get("is_captain")), None)
+                if not captain:
+                    continue
+                pts = _event_points_map(gw).get(int(captain["element"]), 0)
+                # Normal captain contribution only. TC extra is excluded.
+                total += pts * 2
+            except Exception:
+                continue
+
+        rows.append({
+            "entry_id": entry_id,
+            "team_name": r.team_name,
+            "manager_name": r.manager_name,
+            "captain_points": total,
+        })
+
+    return (
+        pd.DataFrame(rows)
+        .sort_values("captain_points", ascending=False)
+        .reset_index(drop=True)
+        if rows else pd.DataFrame()
+    )
 
 def histories(standings):
     rows=[]
@@ -40,42 +162,114 @@ def transfer_efficiency(s):
     return pd.DataFrame(rows).sort_values('transfer_efficiency',ascending=False) if rows else pd.DataFrame()
 
 def special_awards(s):
-    d=histories(s); out={}
-    if d.empty:return out
-    # mid season
-    m=d[d.GW<=19].groupby(['entry_id','team_name','manager_name'],as_index=False).points.sum().sort_values('points',ascending=False); out['Mid Season Champion']=m
-    bench=d.groupby(['entry_id','team_name','manager_name'],as_index=False).bench_points.sum().sort_values('bench_points',ascending=False); out['Most Bench Points']=bench
-    h1=d[d.GW<=19].groupby('entry_id').points.sum(); h2=d[d.GW>=20].groupby('entry_id').points.sum(); base=s[['entry_id','team_name','manager_name']].copy(); base['h1']=base.entry_id.map(h1).fillna(0); base['h2']=base.entry_id.map(h2).fillna(0); base['climb_score']=base.h2-base.h1; out['Biggest Climb']=base.sort_values('climb_score',ascending=False)
-    # captain points via picks
-    caps=[]; no_chip=[]
-    for _,r in s.iterrows():
-        hist=get_manager_history(int(r.entry_id)); chips={int(c['event']) for c in hist.get('chips',[])}
-        cap_total=0
-        for h in hist.get('current',[]):
-            gw=int(h['event'])
-            if gw not in chips:no_chip.append({'entry_id':r.entry_id,'team_name':r.team_name,'manager_name':r.manager_name,'GW':gw,'points':int(h.get('points',0))})
-            try:
-                p=get_manager_picks(int(r.entry_id),gw)
-                for pick in p.get('picks',[]):
-                    if pick.get('is_captain'):
-                        # FPL picks endpoint does not expose player event points directly; use entry_history captain-independent fallback omitted.
-                        pass
-            except Exception: pass
-        caps.append({'entry_id':r.entry_id,'team_name':r.team_name,'manager_name':r.manager_name,'captain_points':cap_total})
-    out['Most Captain Points']=pd.DataFrame(caps).sort_values('captain_points',ascending=False)
-    out['Highest GW Without Chip']=pd.DataFrame(no_chip).sort_values('points',ascending=False).groupby('entry_id',as_index=False).head(1).sort_values('points',ascending=False) if no_chip else pd.DataFrame()
-    # comeback: GW19 rank vs current rank, based on cumulative points
+    d = histories(s)
+    out = {}
+    if d.empty:
+        return out
+
+    # Mid-season standings: cumulative official FPL score through GW19.
+    m = (
+        d[d.GW <= 19]
+        .groupby(["entry_id", "team_name", "manager_name"], as_index=False)
+        .points.sum()
+        .sort_values("points", ascending=False)
+    )
+    out["Mid Season Champion"] = m
+
+    # Most bench points: exclude Bench Boost gameweeks because those points
+    # were activated rather than truly left unused.
+    bench_rows = []
+    for _, r in s.iterrows():
+        entry_id = int(r.entry_id)
+        bb_gws = {
+            int(c["event"])
+            for c in get_manager_history(entry_id).get("chips", [])
+            if c.get("name") == "bboost"
+        }
+        x = d[(d.entry_id == entry_id) & (~d.GW.isin(bb_gws))]
+        bench_rows.append({
+            "entry_id": entry_id,
+            "team_name": r.team_name,
+            "manager_name": r.manager_name,
+            "bench_points": int(x.bench_points.sum()) if not x.empty else 0,
+        })
+    out["Most Bench Points"] = (
+        pd.DataFrame(bench_rows).sort_values("bench_points", ascending=False)
+        if bench_rows else pd.DataFrame()
+    )
+
+    # Biggest Climb = H2 scoring output - H1 scoring output.
+    h1 = d[d.GW <= 19].groupby("entry_id").points.sum()
+    h2 = d[d.GW >= 20].groupby("entry_id").points.sum()
+    base = s[["entry_id", "team_name", "manager_name"]].copy()
+    base["h1"] = base.entry_id.map(h1).fillna(0)
+    base["h2"] = base.entry_id.map(h2).fillna(0)
+    base["climb_score"] = base.h2 - base.h1
+    out["Biggest Climb"] = base.sort_values("climb_score", ascending=False)
+
+    # Most Captain Points: actual captain player points, normalised to 2x.
+    out["Most Captain Points"] = captain_points_table(s)
+
+    # Highest GW without any chip.
+    no_chip = []
+    for _, r in s.iterrows():
+        entry_id = int(r.entry_id)
+        chips = set(_chip_map(entry_id).keys())
+        hist = get_manager_history(entry_id).get("current", [])
+        for h in hist:
+            gw = int(h["event"])
+            if gw not in chips:
+                no_chip.append({
+                    "entry_id": entry_id,
+                    "team_name": r.team_name,
+                    "manager_name": r.manager_name,
+                    "GW": gw,
+                    "points": int(h.get("points", 0)),
+                })
+
+    out["Highest GW Without Chip"] = (
+        pd.DataFrame(no_chip)
+        .sort_values("points", ascending=False)
+        .groupby("entry_id", as_index=False)
+        .head(1)
+        .sort_values("points", ascending=False)
+        if no_chip else pd.DataFrame()
+    )
+
+    # Comeback King: actual league-position gain from GW19 to current/final.
     if not m.empty:
-        mr=m.sort_values('points',ascending=False).reset_index(drop=True); mr['gw19_rank']=mr.index+1
-        cb=s[['entry_id','team_name','manager_name','current_rank']].merge(mr[['entry_id','gw19_rank']],on='entry_id',how='left'); cb['places_gained']=cb.gw19_rank-cb.current_rank; out['Comeback King']=cb.sort_values('places_gained',ascending=False)
-    # consistency: lowest SD of weekly rank, top-10 current only
-    ranks=[]
-    for gw,x in d.groupby('GW'):
-        x=x.copy(); x['gw_rank']=x['points'].rank(method='min',ascending=False); ranks.append(x[['entry_id','gw_rank']])
-    rr=pd.concat(ranks) if ranks else pd.DataFrame(); cons=rr.groupby('entry_id').gw_rank.std().reset_index(name='rank_volatility').merge(s[['entry_id','team_name','manager_name','current_rank']],on='entry_id'); cons=cons[cons.current_rank<=10].sort_values('rank_volatility'); out['Mr Consistent']=cons
-    te=transfer_efficiency(s); out['Transfer Efficiency']=te
-    # Transfer Tactician proxy: points scored on GWs where transfers made, less hits
-    tt=d[d.transfers>0].groupby(['entry_id','team_name','manager_name'],as_index=False).agg(gross_points=('points','sum'),hits_cost=('transfer_cost','sum'),transfer_count=('transfers','sum')); tt['net_transfer_points']=tt.gross_points-tt.hits_cost.abs(); out['Transfer Tactician']=tt.sort_values('net_transfer_points',ascending=False)
+        mr = m.sort_values("points", ascending=False).reset_index(drop=True)
+        mr["gw19_rank"] = mr["points"].rank(method="min", ascending=False).astype(int)
+        cb = s[["entry_id", "team_name", "manager_name", "current_rank"]].merge(
+            mr[["entry_id", "gw19_rank"]], on="entry_id", how="left"
+        )
+        cb["places_gained"] = cb.gw19_rank - cb.current_rank
+        out["Comeback King"] = cb.sort_values("places_gained", ascending=False)
+
+    # Mr Consistent: lowest SD of weekly GW rank among current/final top 10.
+    ranks = []
+    for gw, x in d.groupby("GW"):
+        x = x.copy()
+        x["gw_rank"] = x["points"].rank(method="min", ascending=False)
+        ranks.append(x[["entry_id", "gw_rank"]])
+
+    rr = pd.concat(ranks) if ranks else pd.DataFrame()
+    if not rr.empty:
+        cons = (
+            rr.groupby("entry_id").gw_rank.std().reset_index(name="rank_volatility")
+            .merge(
+                s[["entry_id", "team_name", "manager_name", "current_rank"]],
+                on="entry_id"
+            )
+        )
+        cons = cons[cons.current_rank <= 10].sort_values("rank_volatility")
+        out["Mr Consistent"] = cons
+
+    out["Transfer Efficiency"] = transfer_efficiency(s)
+
+    # Correct Transfer Tactician calculation.
+    out["Transfer Tactician"] = transfer_tactician_table(s)
+
     return out
 
 def prize_summary(s, rivalry=None):

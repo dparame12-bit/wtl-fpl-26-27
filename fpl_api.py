@@ -80,3 +80,15 @@ def get_manager_details(entry_id: int):
     except Exception:
         pass
     return {}
+
+
+@st.cache_data(ttl=60 * 60)
+def get_event_live(event_id: int):
+    """Official player points for one FPL gameweek."""
+    try:
+        r = requests.get(f"{BASE_URL}/event/{event_id}/live/", timeout=30)
+        if r.ok:
+            return r.json()
+    except Exception:
+        pass
+    return {"elements": []}
