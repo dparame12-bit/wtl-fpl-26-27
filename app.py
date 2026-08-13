@@ -137,7 +137,29 @@ if not password_gate():
 
 @st.cache_data(ttl=60 * 60)
 def load_managers():
-    return pd.read_csv("data/managers.csv")
+    path = "data/managers.csv"
+    last_error = None
+
+    # Handles CSVs saved from GitHub/Excel/Windows in different encodings.
+    for encoding in ["utf-8-sig", "utf-16", "cp1252", "latin1"]:
+        try:
+            df = pd.read_csv(path, encoding=encoding)
+            df.columns = [str(c).strip() for c in df.columns]
+
+            required = {"seed", "manager_name", "entry_id"}
+            if required.issubset(df.columns):
+                df["seed"] = pd.to_numeric(df["seed"], errors="raise").astype(int)
+                df["entry_id"] = pd.to_numeric(df["entry_id"], errors="raise").astype(int)
+                df["manager_name"] = df["manager_name"].astype(str).str.strip()
+                return df
+        except (UnicodeDecodeError, UnicodeError, pd.errors.ParserError, ValueError) as e:
+            last_error = e
+            continue
+
+    raise ValueError(
+        "Could not read data/managers.csv. Please save it as CSV UTF-8 with columns: "
+        "seed, manager_name, entry_id."
+    ) from last_error
 
 @st.cache_data(ttl=60 * 60)
 def preseason_roster():
