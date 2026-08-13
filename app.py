@@ -129,13 +129,22 @@ FPL_CSS = """
     padding:18px;text-align:center;font-weight:800;
 }
 .feature-box {
-    border-radius:18px;padding:18px 20px;color:white;
-    min-height:145px; box-shadow:0 10px 25px rgba(0,0,0,.08);
+    border-radius:18px;
+    padding:18px 20px;
+    color:white;
+    min-height:185px;
+    height:185px;
+    box-sizing:border-box;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
 }
 .rivalry { background:linear-gradient(135deg,#e90052,#ff5a5f); }
 .cup { background:linear-gradient(135deg,#37003c,#7a1c83); }
 .prizes { background:linear-gradient(135deg,#007a5e,#00b46f); }
 .chips { background:linear-gradient(135deg,#0476b8,#04b8d4); }
+.special-feature { background:linear-gradient(135deg,#6d28d9,#a855f7); }
 .feature-title {font-size:20px;font-weight:900;margin-bottom:6px;}
 .feature-big {font-size:30px;font-weight:900;color:#fff;}
 .small-muted {color:#ddd;font-size:12px;}
@@ -307,16 +316,69 @@ def roster_grid(roster):
                 st.markdown(f'<div class="pending-card">Slot {n}<br><span style="font-weight:500">Awaiting manager</span></div>', unsafe_allow_html=True)
 
 def preseason_features():
-    st.markdown('<div class="section-title">🔥 What’s coming this season</div>', unsafe_allow_html=True)
-    c1,c2,c3,c4 = st.columns(4)
+    title_col, rules_col = st.columns([5, 1])
+    with title_col:
+        st.markdown('<div class="section-title">🔥 What’s coming this season</div>', unsafe_allow_html=True)
+    with rules_col:
+        st.write("")
+        st.button(
+            "📜 View Rules",
+            key="home_rules_button",
+            use_container_width=True,
+            on_click=go_to_rules,
+        )
+
+    c1,c2,c3,c4,c5 = st.columns(5)
+
     with c1:
-        st.markdown("""<div class="feature-box rivalry"><div class="feature-title">🔥 Rivalry Week</div><div class="feature-big">GW10 + GW30</div><div>10 head-to-head battles each week · ₹50 per win</div></div>""", unsafe_allow_html=True)
+        st.markdown(
+            """<div class="feature-box prizes">
+            <div class="feature-title">💰 Season Prizes</div>
+            <div class="feature-big">₹40,000</div>
+            <div>League · GW · MOTM · Cup · Chips · Awards</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
     with c2:
-        st.markdown("""<div class="feature-box cup"><div class="feature-title">🏆 WTL Cup</div><div class="feature-big">Starts GW19</div><div>12 byes · 4 play-ins · knockout drama</div></div>""", unsafe_allow_html=True)
+        st.markdown(
+            """<div class="feature-box cup">
+            <div class="feature-title">🏆 WTL Cup</div>
+            <div class="feature-big">Starts GW19</div>
+            <div>12 byes · 4 play-ins · knockout drama · one champion</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
     with c3:
-        st.markdown("""<div class="feature-box prizes"><div class="feature-title">💰 Season Prizes</div><div class="feature-big">₹40,000</div><div>League · GW · MOTM · Cup · Special Awards</div></div>""", unsafe_allow_html=True)
+        st.markdown(
+            """<div class="feature-box chips">
+            <div class="feature-title">🎮 Chip Awards</div>
+            <div class="feature-big">6 prizes</div>
+            <div>Bench Boost · Triple Captain · Free Hit across H1 & H2</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
     with c4:
-        st.markdown("""<div class="feature-box chips"><div class="feature-title">🎮 Chip Awards</div><div class="feature-big">6 prizes</div><div>BB · TC · FH across H1 and H2</div></div>""", unsafe_allow_html=True)
+        st.markdown(
+            """<div class="feature-box rivalry">
+            <div class="feature-title">🔥 Rivalry Week</div>
+            <div class="feature-big">GW10 + GW30</div>
+            <div>Random H2H battles. Draw stays under wraps until it is time. 👀</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+    with c5:
+        st.markdown(
+            """<div class="feature-box special-feature">
+            <div class="feature-title">⭐ Special Awards</div>
+            <div class="feature-big">8 prizes</div>
+            <div>Climbs · captains · transfers · comebacks · consistency & more</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
 
 def render_rules():
@@ -493,6 +555,12 @@ def render_rules():
         st.success("Total season allocation: ₹40,000 ✅")
 
 
+def go_to_rules():
+    st.session_state["page_nav"] = "Rules"
+
+if "page_nav" not in st.session_state:
+    st.session_state["page_nav"] = "Dashboard"
+
 st.sidebar.markdown("## ⚽ WTL 26–27")
 st.sidebar.caption("Fantasy. Rivalry. Chaos.")
 page = st.sidebar.radio(
@@ -502,6 +570,7 @@ page = st.sidebar.radio(
         "Rivalry Week","WTL Cup","Chip Awards","Transfer Efficiency",
         "Special Awards","Troll Awards","Rules","Prize Summary"
     ],
+    key="page_nav",
 )
 if st.sidebar.button("🔄 Refresh FPL data"):
     st.cache_data.clear()
