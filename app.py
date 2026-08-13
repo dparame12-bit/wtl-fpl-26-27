@@ -130,24 +130,41 @@ FPL_CSS = """
 }
 .feature-box {
     border-radius:18px;
-    padding:18px 20px;
+    padding:16px 18px;
     color:white;
-    min-height:185px;
-    height:185px;
+    min-height:205px;
+    height:205px;
     box-sizing:border-box;
     box-shadow:0 10px 25px rgba(0,0,0,.08);
     display:flex;
     flex-direction:column;
     justify-content:flex-start;
+    overflow:hidden;
 }
 .rivalry { background:linear-gradient(135deg,#e90052,#ff5a5f); }
 .cup { background:linear-gradient(135deg,#37003c,#7a1c83); }
 .prizes { background:linear-gradient(135deg,#007a5e,#00b46f); }
 .chips { background:linear-gradient(135deg,#0476b8,#04b8d4); }
 .special-feature { background:linear-gradient(135deg,#6d28d9,#a855f7); }
-.feature-title {font-size:20px;font-weight:900;margin-bottom:6px;}
-.feature-big {font-size:30px;font-weight:900;color:#fff;}
-.small-muted {color:#ddd;font-size:12px;}
+.feature-title {
+    font-size:18px;
+    line-height:1.15;
+    font-weight:900;
+    margin-bottom:8px;
+}
+.feature-big {
+    font-size:25px;
+    line-height:1.12;
+    font-weight:900;
+    color:#fff;
+    margin-bottom:8px;
+}
+.feature-box > div:last-child {
+    font-size:13px;
+    line-height:1.45;
+    overflow-wrap:anywhere;
+}
+.small-muted {color:#ddd;font-size:11px;}
 div[data-testid="stMetric"] {
     background:white;border:1px solid #ece8ef;border-radius:18px;
     padding:14px 16px;box-shadow:0 6px 18px rgba(55,0,60,.05);
@@ -345,7 +362,7 @@ def preseason_features():
             """<div class="feature-box cup">
             <div class="feature-title">🏆 WTL Cup</div>
             <div class="feature-big">Starts GW19</div>
-            <div>12 byes · 4 play-ins · knockout drama · one champion</div>
+            <div>12 byes · 4 play-ins · knockout to one champion</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -355,7 +372,7 @@ def preseason_features():
             """<div class="feature-box chips">
             <div class="feature-title">🎮 Chip Awards</div>
             <div class="feature-big">6 prizes</div>
-            <div>Bench Boost · Triple Captain · Free Hit across H1 & H2</div>
+            <div>BB · TC · FH across H1 & H2</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -365,7 +382,7 @@ def preseason_features():
             """<div class="feature-box rivalry">
             <div class="feature-title">🔥 Rivalry Week</div>
             <div class="feature-big">GW10 + GW30</div>
-            <div>Random H2H battles. Draw stays under wraps until it is time. 👀</div>
+            <div>Random H2H battles. Draw stays under wraps. 👀</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -375,7 +392,7 @@ def preseason_features():
             """<div class="feature-box special-feature">
             <div class="feature-title">⭐ Special Awards</div>
             <div class="feature-big">8 prizes</div>
-            <div>Climbs · captains · transfers · comebacks · consistency & more</div>
+            <div>Climbs · captains · transfers · comebacks · consistency</div>
             </div>""",
             unsafe_allow_html=True,
         )
