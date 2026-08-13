@@ -68,10 +68,18 @@ def transfer_tactician_table(s):
         hits_cost = sum(hit_cost_by_gw.get(gw, 0) for gw in used_gws)
         net = transfer_gain - hits_cost
 
+        eligible = counted_transfers >= 10
+
         rows.append({
             "entry_id": entry_id,
             "team_name": r.team_name,
             "manager_name": r.manager_name,
+            "ordinary_transfers": counted_transfers,
+            "gross_transfer_gain": transfer_gain,
+            "hit_cost": hits_cost,
+            "net_transfer_gain": net,
+            "eligible": "Yes" if eligible else "No",
+            # Keep legacy fields for compatibility with any existing views.
             "transfer_gain": transfer_gain,
             "hits_cost": hits_cost,
             "transfer_count": counted_transfers,
@@ -80,7 +88,10 @@ def transfer_tactician_table(s):
 
     return (
         pd.DataFrame(rows)
-        .sort_values(["net_transfer_points", "transfer_gain"], ascending=[False, False])
+        .sort_values(
+            ["eligible", "net_transfer_gain", "gross_transfer_gain"],
+            ascending=[False, False, False]
+        )
         .reset_index(drop=True)
         if rows else pd.DataFrame()
     )

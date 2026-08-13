@@ -39,8 +39,23 @@ FPL_CSS = """
 [data-testid="stSidebar"] button {
     background: #00ff87 !important;
     color: #220028 !important;
-    border: none !important;
-    font-weight: 800 !important;
+    border: 2px solid #00ff87 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 14px rgba(0,255,135,.22) !important;
+}
+[data-testid="stSidebar"] button p,
+[data-testid="stSidebar"] button span {
+    color: #220028 !important;
+    font-weight: 900 !important;
+}
+[data-testid="stSidebar"] button:hover {
+    background: #ffffff !important;
+    color: #37003c !important;
+    border-color: #00ff87 !important;
+}
+[data-testid="stSidebar"] button:hover p,
+[data-testid="stSidebar"] button:hover span {
+    color: #37003c !important;
 }
 .hero {
     background: linear-gradient(120deg, #37003c 0%, #5b0a63 48%, #e90052 100%);
@@ -399,7 +414,7 @@ def render_rules():
         st.markdown('<div class="formula">BIGGEST CLIMB = GW20–38 POINTS − GW1–19 POINTS</div>', unsafe_allow_html=True)
         st.markdown('<div class="rule-example"><b>Example:</b> H1 = 980, H2 = 1,120 → Climb Score = <b>+140</b>. Highest score wins.</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="rule-card"><h4>🧠 Transfer Tactician</h4>Highest genuine immediate transfer gain from ordinary transfers, after deducting transfer hits. Wildcard and Free Hit GWs are excluded.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="rule-card"><h4>🧠 Transfer Tactician</h4>Highest genuine immediate transfer gain from ordinary transfers, after deducting transfer hits. A manager must make <b>at least 10 ordinary transfers</b> during the season to qualify. Wildcard and Free Hit transfers are excluded from both the calculation and the 10-transfer minimum.</div>', unsafe_allow_html=True)
         st.markdown("""
 <div class="flow">
   <div class="flow-box">Player OUT<br>2 pts</div><div class="arrow">→</div>
@@ -409,7 +424,7 @@ def render_rules():
   <div class="flow-box flow-green">Net gain<br>+5</div>
 </div>
 """, unsafe_allow_html=True)
-        st.markdown("For every normal transfer, the app compares **incoming player's points vs outgoing player's points in that same GW**. These gains are summed across the season and official hit costs are deducted once per GW.")
+        st.markdown("For every normal transfer, the app compares **incoming player's points vs outgoing player's points in that same GW**. These gains are summed across the season and official hit costs are deducted once per GW. Managers with fewer than **10 qualifying ordinary transfers** are shown for transparency but cannot win the award.")
         st.markdown('<div class="formula">NET TRANSFER POINTS = Σ(IN POINTS − OUT POINTS) − TRANSFER HIT COST</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="rule-card"><h4>©️ Most Captain Points</h4>Highest cumulative normal captain contribution across the season. Each captain is counted at 2×. On TC weeks, we still use 2× here so the extra TC point is rewarded only in the Chip Award.</div>', unsafe_allow_html=True)
@@ -473,6 +488,7 @@ def render_rules():
 - If FPL retrospectively adjusts points, WTL calculations update with the corrected FPL data.
 - Special-award leaderboards shown during the season are **live/provisional** until the relevant award can be finalized.
 - Wildcard and Free Hit GWs are excluded from **Transfer Tactician** because those transfer sets are unlimited or temporary.
+- **Transfer Tactician eligibility:** minimum 10 ordinary transfers across the season. Managers below the threshold remain visible but are marked ineligible.
 """)
         st.success("Total season allocation: ₹40,000 ✅")
 
@@ -634,20 +650,48 @@ else:
                 else:
                     st.metric("Current Leader", d.iloc[0].team_name)
                     if key == "Transfer Tactician":
-                        st.caption("Net = Σ(incoming GW points − outgoing GW points) − transfer-hit cost. Wildcard/Free Hit GWs excluded.")
-                        chart = (
-                            alt.Chart(d.head(15))
-                            .mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5)
-                            .encode(
-                                x=alt.X("net_transfer_points:Q", title="Net Transfer Points"),
-                                y=alt.Y("team_name:N", sort="-x", title="Team"),
-                                color=alt.Color("net_transfer_points:Q", scale=alt.Scale(scheme="greens"), legend=None),
-                                tooltip=["team_name","manager_name","transfer_gain","hits_cost","transfer_count","net_transfer_points"],
-                            )
-                            .properties(height=430)
+                        st.caption(
+                            "Net Transfer Gain = Σ(incoming GW points − outgoing GW points) − transfer-hit cost. "
+                            "Minimum 10 ordinary transfers to qualify; Wildcard/Free Hit transfers are excluded."
                         )
-                        st.altair_chart(chart, use_container_width=True)
-                    st.dataframe(d, use_container_width=True, hide_index=True)
+                        eligible_d = d[d["eligible"] == "Yes"].copy()
+                        if eligible_d.empty:
+                            st.info("No manager has reached the 10 ordinary-transfer eligibility threshold yet.")
+                        else:
+                            leader = eligible_d.iloc[0]
+                            st.metric("Current Eligible Leader", leader.team_name)
+                            chart = (
+                                alt.Chart(eligible_d.head(15))
+                                .mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5)
+                                .encode(
+                                    x=alt.X("net_transfer_gain:Q", title="Net Transfer Gain"),
+                                    y=alt.Y("team_name:N", sort="-x", title="Team"),
+                                    color=alt.Color("net_transfer_gain:Q", scale=alt.Scale(scheme="greens"), legend=None),
+                                    tooltip=[
+                                        "team_name","manager_name","ordinary_transfers",
+                                        "gross_transfer_gain","hit_cost","net_transfer_gain","eligible"
+                                    ],
+                                )
+                                .properties(height=430)
+                            )
+                            st.altair_chart(chart, use_container_width=True)
+
+                        display_cols = [
+                            "team_name","manager_name","ordinary_transfers",
+                            "gross_transfer_gain","hit_cost","net_transfer_gain","eligible"
+                        ]
+                        display = d[display_cols].rename(columns={
+                            "team_name": "Team",
+                            "manager_name": "Manager",
+                            "ordinary_transfers": "Ordinary Transfers",
+                            "gross_transfer_gain": "Gross Transfer Gain",
+                            "hit_cost": "Hit Cost",
+                            "net_transfer_gain": "Net Transfer Gain",
+                            "eligible": "Eligible?",
+                        })
+                        st.dataframe(display, use_container_width=True, hide_index=True)
+                    else:
+                        st.dataframe(d, use_container_width=True, hide_index=True)
 
     elif page == "Troll Awards":
         st.markdown('<div class="section-title">😈 Troll Awards · ₹1,000</div>', unsafe_allow_html=True)
