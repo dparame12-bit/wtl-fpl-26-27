@@ -287,7 +287,7 @@ def hero():
     <div class="hero">
       <div class="hero-kicker">WTL · FANTASY PREMIER LEAGUE · 2026–27</div>
       <div class="hero-title">The race for WTL glory starts here.</div>
-      <div class="hero-sub">₹40,000 on the line · 38 Gameweeks · Rivalries, cup drama, chips, awards and bragging rights.</div>
+      <div class="hero-sub">₹{TOTAL_PRIZE_POOL:,} on the line · 38 Gameweeks · Rivalries, cup drama, chips, awards and bragging rights.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -349,9 +349,9 @@ def preseason_features():
 
     with c1:
         st.markdown(
-            """<div class="feature-box prizes">
+            f"""<div class="feature-box prizes">
             <div class="feature-title">💰 Season Prizes</div>
-            <div class="feature-big">₹40,000</div>
+            <div class="feature-big">₹{TOTAL_PRIZE_POOL:,}</div>
             <div>League · GW · MOTM · Cup · Chips · Awards</div>
             </div>""",
             unsafe_allow_html=True,
@@ -362,7 +362,7 @@ def preseason_features():
             """<div class="feature-box cup">
             <div class="feature-title">🏆 WTL Cup</div>
             <div class="feature-big">Starts GW19</div>
-            <div>12 byes · 4 play-ins · knockout to one champion</div>
+            <div>10 byes · 6 play-ins · knockout to one champion</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -414,17 +414,17 @@ def render_rules():
     ])
 
     with t1:
-        st.markdown("### 🏆 League Finishers — ₹20,500")
+        st.markdown("### 🏆 League Finishers — ₹23,900")
         st.markdown("Final **official FPL total points after GW38** determine the league positions. Transfer-hit deductions are already reflected in the official total.")
         st.markdown("""
 | Finish | Prize |
 |---|---:|
-| 🥇 1st | ₹7,000 |
-| 🥈 2nd | ₹5,000 |
-| 🥉 3rd | ₹3,500 |
-| 4th | ₹2,500 |
-| 5th | ₹1,500 |
-| 6th | ₹1,000 |
+| 🥇 1st | ₹8,000 |
+| 🥈 2nd | ₹5,500 |
+| 🥉 3rd | ₹4,000 |
+| 4th | ₹2,800 |
+| 5th | ₹2,100 |
+| 6th | ₹1,500 |
 """)
         st.markdown('<div class="rule-example"><b>Example:</b> If FPL shows 2,420 points after GW38, WTL uses 2,420. We do not add back transfer hits.</div>', unsafe_allow_html=True)
 
@@ -448,18 +448,18 @@ def render_rules():
         st.markdown("**Tie:** ₹500 is split equally.")
 
     with t3:
-        st.markdown("### 🏆 WTL Cup — ₹1,000")
-        st.markdown("All 20 managers enter. **12 receive randomized R32 byes**; the remaining 8 play four opening fixtures. Each matchup is decided using the combined official net FPL score across its two-GW window.")
+        st.markdown("### 🏆 WTL Cup — ₹1,500")
+        st.markdown("All 22 managers enter. **10 receive randomized R32 byes**; the remaining 12 play six opening fixtures. Each matchup is decided using the combined official net FPL score across its two-GW window.")
         st.markdown("""
 <div class="flow">
-  <div class="flow-box">R32<br>12 BYEs + 4 games</div><div class="arrow">→</div>
+  <div class="flow-box">R32<br>10 BYEs + 6 games</div><div class="arrow">→</div>
   <div class="flow-box">R16<br>16 teams</div><div class="arrow">→</div>
   <div class="flow-box">QF<br>8 teams</div><div class="arrow">→</div>
   <div class="flow-box">SF<br>4 teams</div><div class="arrow">→</div>
   <div class="flow-box flow-green">FINAL<br>2 teams</div>
 </div>
 """, unsafe_allow_html=True)
-        st.markdown("The draw is generated once after **20/20 managers are confirmed** and then frozen.")
+        st.markdown("The draw is generated once after **22/22 managers are confirmed** and then frozen.")
         st.markdown('<div class="rule-example"><b>Example:</b> Manager A scores 61 + 70 = 131 across the two GWs. Manager B scores 67 + 60 = 127. Manager A advances.</div>', unsafe_allow_html=True)
         st.markdown("**Cup tie:** if aggregate scores are tied, higher overall WTL league position at the end of the second GW in that round advances.")
 
@@ -541,8 +541,8 @@ def render_rules():
         st.markdown("To qualify, a manager must have made a transfer and/or played a chip in at least **25 different GWs**. If the bottom manager ghosted early, the award moves to the next-lowest eligible manager.")
 
     with t7:
-        st.markdown("### 🔥 WTL Rivalry Week — ₹1,000")
-        st.markdown("Two special H2H events: **GW10 and GW30**. Before each event, the 20 managers are randomly paired into 10 fixtures.")
+        st.markdown("### 🔥 WTL Rivalry Week — ₹1,100")
+        st.markdown("Two special H2H events: **GW10 and GW30**. Before each event, the 22 managers are randomly paired into 11 fixtures.")
         st.markdown("""
 <div class="flow">
   <div class="flow-box">Manager A<br>78 pts</div>
@@ -553,7 +553,7 @@ def render_rules():
 </div>
 """, unsafe_allow_html=True)
         st.markdown("Official **net** GW score is used, so transfer hits count. Each matchup winner receives **₹50**.")
-        st.markdown("10 winners × ₹50 × 2 Rivalry Weeks = **₹1,000**.")
+        st.markdown("11 winners × ₹50 × 2 Rivalry Weeks = **₹1,100**.")
         st.markdown("**Tie:** ₹50 is split ₹25 / ₹25.")
         st.markdown("Rivalry Week is completely independent of the league table and WTL Cup.")
 
@@ -569,7 +569,7 @@ def render_rules():
 - Wildcard and Free Hit GWs are excluded from **Transfer Tactician** because those transfer sets are unlimited or temporary.
 - **Transfer Tactician eligibility:** minimum 10 ordinary transfers across the season. Managers below the threshold remain visible but are marked ineligible.
 """)
-        st.success("Total season allocation: ₹40,000 ✅")
+        st.success(f"Total season allocation: ₹{TOTAL_PRIZE_POOL:,} ✅")
 
 
 def go_to_rules():
@@ -648,17 +648,17 @@ elif standings.empty:
     )
     if page == "Rivalry Week":
         st.markdown('<div class="section-title">🔥 Rivalry Week</div>', unsafe_allow_html=True)
-        st.info(f"Draw locked at {confirmed}/{TARGET_MANAGERS} managers. It will be generated once all 20 are confirmed.")
-        st.markdown("**Scheduled:** GW10 and GW30 · 10 H2H fixtures · ₹50 to each winner.")
+        st.info(f"Draw locked at {confirmed}/{TARGET_MANAGERS} managers. It will be generated once all 22 are confirmed.")
+        st.markdown("**Scheduled:** GW10 and GW30 · 11 H2H fixtures · ₹50 to each winner.")
     elif page == "WTL Cup":
         st.markdown('<div class="section-title">🏆 WTL Cup</div>', unsafe_allow_html=True)
-        st.info(f"Draw locked at {confirmed}/{TARGET_MANAGERS} managers. It will be generated once all 20 are confirmed.")
-        st.markdown("**Format:** 12 first-round byes + 4 play-in fixtures → knockout rounds → one champion.")
+        st.info(f"Draw locked at {confirmed}/{TARGET_MANAGERS} managers. It will be generated once all 22 are confirmed.")
+        st.markdown("**Format:** 10 first-round byes + 6 play-in fixtures → Round of 16 → Quarter-finals → Semi-finals → Final.")
     elif page == "Rules":
         render_rules()
     elif page == "Prize Summary":
         st.markdown('<div class="section-title">💰 Prize Summary</div>', unsafe_allow_html=True)
-        st.info("Prize payouts will begin populating after GW1. Total season allocation is ₹40,000.")
+        st.info(f"Prize payouts will begin populating after GW1. Total season allocation is ₹{TOTAL_PRIZE_POOL:,}.")
     else:
         st.info("Live leaderboard data for this section will appear after GW1.")
 
